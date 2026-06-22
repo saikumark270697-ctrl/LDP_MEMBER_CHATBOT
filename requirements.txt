@@ -1,0 +1,8 @@
+streamlit>=1.30.0
+contentful
+pinecone
+groq
+sentence-transformers
+python-dotenv
+google-genai
+
