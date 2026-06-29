@@ -54,11 +54,40 @@ PUBLIC_LINKS = {
 }
 
 RESTRICTED_PATTERNS = [
-    "member id", "ssn", "social security", "date of birth", "dob", 
-    "password", "claim number", "my claim", "my eligibility", 
-    "my benefits", "my copay", "my deductible", "diagnose", 
+    "member id", "ssn", "social security", "date of birth", "dob",
+    "password", "claim number", "my claim", "my eligibility",
+    "my benefits", "my copay", "my deductible", "diagnose",
     "medical advice"
 ]
+
+CAPABILITIES_PATTERNS = [
+    "how can you help", "what can you help", "what can you do",
+    "what can i ask", "what can i search", "what do you do",
+    "help me", "what are you", "who are you", "what is this",
+    "what topics", "what questions", "tell me about yourself",
+    "how does this work", "what can this chatbot"
+]
+
+CAPABILITIES_RESPONSE = (
+    "I'm the Liberty Dental Plan virtual assistant. Here's what I can help you with:\n\n"
+    "**For Members:**\n"
+    "- Find an in-network dentist near you\n"
+    "- Log in to the Member Portal\n"
+    "- Download the Liberty Dental mobile app\n"
+    "- Teledentistry and dental emergencies\n"
+    "- File a grievance or appeal\n\n"
+    "**For Plan Shoppers:**\n"
+    "- Explore individual and family dental plans\n"
+    "- Shop and compare plans online\n\n"
+    "**For Providers:**\n"
+    "- Join the Liberty Dental network\n"
+    "- Access the Provider Portal\n\n"
+    "**For Brokers:**\n"
+    "- Learn about selling Liberty plans\n"
+    "- Contact client services\n\n"
+    "Note: I can only help with public website information. For your personal account, claims, "
+    "or benefits, please log in to the secure Member Portal."
+)
 
 # --- UTILITY FUNCTIONS ---
 def normalize(text):
@@ -67,6 +96,10 @@ def normalize(text):
 def has_restricted_request(question):
     normalized_question = normalize(question)
     return any(pattern in normalized_question for pattern in RESTRICTED_PATTERNS)
+
+def is_capabilities_request(question):
+    normalized_question = normalize(question)
+    return any(pattern in normalized_question for pattern in CAPABILITIES_PATTERNS)
 
 def format_links(link_names):
     if not link_names:
@@ -111,6 +144,9 @@ def fetch_answer_from_ai(question):
             ["Member Login", "Contact Liberty"]
         )
 
+    if is_capabilities_request(question):
+        return (CAPABILITIES_RESPONSE, ["Members", "Shop Plans", "Find a Dentist", "Join Provider Network"])
+
     # 1. Embed the query
     model = load_embedding_model()
     query_embedding = model.encode([question]).tolist()[0]
@@ -120,14 +156,14 @@ def fetch_answer_from_ai(question):
     try:
         results = index.query(
             vector=query_embedding,
-            top_k=3,
+            top_k=6,
             include_metadata=True
         )
     except Exception as e:
         print(f"Pinecone error: {e}")
         return "I'm having trouble accessing my knowledge base right now. Please try again later.", ["Contact Liberty"]
 
-    if not results.matches or results.matches[0].score < 0.2:
+    if not results.matches or results.matches[0].score < 0.45:
         return (
             "I could not find specific information about that in our public knowledge base. "
             "Please visit the Contact Liberty page or use the appropriate secure portal for assistance.",
@@ -142,7 +178,7 @@ def fetch_answer_from_ai(question):
     
     context = "\n\n".join(context_parts)
     
-    # 4. Generate answer with Gemini (Primary) or Groq (Fallback)
+    # 4. Generate answer with Llama (Primary) or Gemini (Fallback)
     system_prompt = (
         "You are a helpful, professional customer support assistant for Liberty Dental Plan. "
         "Answer the user's question clearly and naturally using ONLY the provided knowledge base context. "
@@ -150,41 +186,41 @@ def fetch_answer_from_ai(question):
         "can only provide information available on the public website and direct them to contact support. "
         "Maintain a human-like, friendly, and professional tone. Keep responses concise."
     )
-    
+
     try:
-        gemini_client = get_gemini_client()
-        response = gemini_client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=f"Context Information:\n{context}\n\nUser Question: {question}",
-            config=genai.types.GenerateContentConfig(
-                system_instruction=system_prompt,
-                temperature=0.3,
-                max_output_tokens=256,
-            )
+        groq_client = get_groq_client()
+        chat_completion = groq_client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": system_prompt
+                },
+                {
+                    "role": "user",
+                    "content": f"Context Information:\n{context}\n\nUser Question: {question}"
+                }
+            ],
+            model="llama-3.3-70b-versatile",
+            temperature=0.3,
+            max_tokens=600,
         )
-        answer = response.text
+        answer = chat_completion.choices[0].message.content
     except Exception as e:
-        print(f"Gemini error, falling back to Groq: {e}")
+        print(f"Llama/Groq error, falling back to Gemini: {e}")
         try:
-            groq_client = get_groq_client()
-            chat_completion = groq_client.chat.completions.create(
-                messages=[
-                    {
-                        "role": "system",
-                        "content": system_prompt
-                    },
-                    {
-                        "role": "user",
-                        "content": f"Context Information:\n{context}\n\nUser Question: {question}"
-                    }
-                ],
-                model="llama3-8b-8192",
-                temperature=0.3,
-                max_tokens=256,
+            gemini_client = get_gemini_client()
+            response = gemini_client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=f"Context Information:\n{context}\n\nUser Question: {question}",
+                config=genai.types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    temperature=0.3,
+                    max_output_tokens=600,
+                )
             )
-            answer = chat_completion.choices[0].message.content
-        except Exception as groq_e:
-            print(f"Groq error: {groq_e}")
+            answer = response.text
+        except Exception as gemini_e:
+            print(f"Gemini error: {gemini_e}")
             return "I'm sorry, I am experiencing a temporary technical issue generating an answer.", ["Contact Liberty"]
             
     # Determine helpful links based on the context/answer
@@ -336,7 +372,7 @@ def main():
         <div class="ldp-header">
             <span class="status-badge">AI Integration Live</span>
             <h1>Liberty AI Assistant</h1>
-            <p>Powered by Contentful, Pinecone, and Groq</p>
+            <p>Powered by Contentful, Pinecone, and Llama</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -358,7 +394,7 @@ def main():
         st.markdown("### Technical Architecture")
         st.caption(
             "Connected directly to **Contentful CMS** for live knowledge extraction. "
-            "Contexts are retrieved via semantic search using **Pinecone** and responses are generated in a human-like tone using **Groq** LLMs."
+            "Contexts are retrieved via semantic search using **Pinecone** and responses are generated in a human-like tone using **Llama 3.3 70B** via Groq."
         )
         
         if st.button("🔄 Reset Conversation", type="primary"):

@@ -1,0 +1,339 @@
+<title>LDP Chatbot — Counts & Coverage</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --blue: #005eb8; --teal: #007a7a;
+    --blue-lt: #e8f0fb; --teal-lt: #e6f5f5;
+    --bg: #f2f5f9; --surface: #fff;
+    --ink: #0f1f33; --mid: #4a5f75; --faint: #8fa1b3;
+    --green: #0d9f6e; --green-bg: #e6f7f2;
+    --red: #c0392b; --red-bg: #fdecea;
+    --amber: #b45309; --amber-bg: #fef3cd;
+    --border: #dde5ef; --r: 8px;
+  }
+  body { font-family: -apple-system,'Segoe UI',system-ui,sans-serif; background: var(--bg); color: var(--ink); font-size: 15px; line-height: 1.6; }
+  .page { max-width: 860px; margin: 0 auto; padding: 44px 20px 72px; }
+
+  /* header */
+  .hdr { border-bottom: 2px solid var(--blue); padding-bottom: 24px; margin-bottom: 36px; }
+  .hdr h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+  .hdr p  { font-size: 13px; color: var(--mid); margin-top: 4px; }
+
+  /* section */
+  .sec { margin-bottom: 44px; }
+  .sec-lbl { font-size: 10px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: var(--blue); margin-bottom: 10px; }
+  .sec-ttl { font-size: 17px; font-weight: 700; letter-spacing: -0.2px; margin-bottom: 14px; text-wrap: balance; }
+
+  /* stat row */
+  .stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .stat {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 16px 20px; flex: 1; min-width: 140px;
+  }
+  .stat-n { font-size: 36px; font-weight: 800; letter-spacing: -1px; line-height: 1; color: var(--blue); font-variant-numeric: tabular-nums; }
+  .stat-lbl { font-size: 12px; color: var(--mid); margin-top: 4px; }
+
+  /* alert box */
+  .alert {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 14px 18px; border-radius: var(--r); margin-bottom: 14px; font-size: 13px; line-height: 1.55;
+  }
+  .alert.warn { background: var(--amber-bg); color: #6b3a0f; border-left: 4px solid var(--amber); }
+  .alert.info { background: var(--blue-lt); color: #1a3a6e; border-left: 4px solid var(--blue); }
+  .alert.good { background: var(--green-bg); color: #065038; border-left: 4px solid var(--green); }
+  .alert-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+
+  /* table */
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; font-size: 13px; }
+  th { background: var(--ink); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; padding: 10px 14px; text-align: left; }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #f8fafc; }
+
+  .pill { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+  .pill.yes   { background: var(--green-bg);  color: var(--green); }
+  .pill.no    { background: var(--red-bg);    color: var(--red); }
+  .pill.only  { background: var(--amber-bg);  color: var(--amber); }
+  .pill.kw    { background: var(--blue-lt);   color: var(--blue); }
+
+  /* content pages */
+  .pages-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 10px; }
+  .pg-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 16px; }
+  .pg-source { font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
+  .pg-source.cf  { color: var(--teal); }
+  .pg-source.seed{ color: var(--blue); }
+  .pg-ttl { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .pg-desc { font-size: 11.5px; color: var(--mid); line-height: 1.4; }
+
+  /* flow strip */
+  .flow { display: flex; align-items: center; flex-wrap: wrap; gap: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 14px; }
+  .fl-step { flex: 1; min-width: 110px; padding: 14px 14px; border-right: 1px dashed var(--border); font-size: 12px; }
+  .fl-step:last-child { border-right: none; }
+  .fl-label { font-weight: 700; color: var(--ink); margin-bottom: 3px; }
+  .fl-note  { color: var(--mid); font-size: 11px; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
+  code { background: #e8f0fb; padding: 1px 5px; border-radius: 3px; font-size: 12px; font-family: monospace; }
+</style>
+
+<div class="page">
+
+  <div class="hdr">
+    <h1>🦷 LDP Chatbot — Exact Counts & Coverage Audit</h1>
+    <p>Contentful pages · Links in dictionary · Links shown from answers · Critical gap found</p>
+  </div>
+
+
+  <!-- ── Contentful ── -->
+  <div class="sec">
+    <div class="sec-lbl">Section 01</div>
+    <div class="sec-ttl">Contentful Pages — What's Actually Indexed</div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-n">3</div>
+        <div class="stat-lbl">Pages in content_entries.json snapshot</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n">8</div>
+        <div class="stat-lbl">Seed knowledge items (always in Pinecone)</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n" style="color:var(--amber);">≤100</div>
+        <div class="stat-lbl">Live Contentful entries (inspect_content.py fetches without pagination)</div>
+      </div>
+    </div>
+
+    <div class="alert warn">
+      <span class="alert-icon">⚠️</span>
+      <div><strong>Big problem found:</strong> All 3 Contentful entries in the snapshot are Medicaid state-specific pages (Nevada, Florida, California). The main public website pages — Find a Dentist, Member Portal, Plans — are NOT in Contentful as separate entries. The chatbot's knowledge of those topics comes entirely from the 8 hardcoded seed items, not from real CMS pages.</div>
+    </div>
+
+    <div class="alert warn" style="margin-bottom:18px;">
+      <span class="alert-icon">⚠️</span>
+      <div><strong>Second problem:</strong> Contentful's <code>page</code> content type stores actual body text inside <strong>referenced section entries</strong> (linked by ID). The pipeline only reads <code>metaTitle</code> + <code>metaDescription</code> from the top-level page — it never fetches the section entries that contain the real paragraphs. So Contentful pages are indexed with only their SEO titles and 1–2 sentence descriptions, not the full content.</div>
+    </div>
+
+    <div style="font-size:12px; font-weight:700; color:var(--mid); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:10px;">The 3 Contentful Pages Currently in the Snapshot</div>
+    <div class="pages-grid" style="margin-bottom:18px;">
+      <div class="pg-card">
+        <div class="pg-source cf">Contentful</div>
+        <div class="pg-ttl">Healthy Behaviors Program (Nevada)</div>
+        <div class="pg-desc">Nevada Medicaid preventive dental care program. Route: /nevada/healthy-behaviors-program</div>
+      </div>
+      <div class="pg-card">
+        <div class="pg-source cf">Contentful</div>
+        <div class="pg-ttl">Authorization for Release of Health Information (FL Medicaid)</div>
+        <div class="pg-desc">Submit health info release form for Florida Medicaid. Route: /florida/authorization-for-release-of-health-information</div>
+      </div>
+      <div class="pg-card">
+        <div class="pg-source cf">Contentful</div>
+        <div class="pg-ttl">In-Person Dental Request (California Medi-Cal)</div>
+        <div class="pg-desc">In-person dental visit request form for Medi-Cal. Route: /medicaid/california/healthy-behaviors-program/in-person-dental-visit</div>
+      </div>
+    </div>
+
+    <div style="font-size:12px; font-weight:700; color:var(--mid); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:10px;">The 8 Seed Knowledge Items (hardcoded in data_pipeline.py)</div>
+    <div class="pages-grid">
+      <div class="pg-card">
+        <div class="pg-source seed">Seed kb_001</div>
+        <div class="pg-ttl">Mobile App Download</div>
+        <div class="pg-desc">Access ID card, find dentist, check benefits on phone. Apple + Android links.</div>
+      </div>
+      <div class="pg-card">
+        <div class="pg-source seed">Seed kb_002</div>
+        <div class="pg-ttl">Individual & Family Dental Plans</div>
+        <div class="pg-desc">No deductibles, no waiting periods, emergency coverage. Shop Plans portal.</div>
+      </div>
+      <div class="pg-card">
+        <div class="pg-source seed">Seed kb_003</div>
+        <div class="pg-ttl">Member Support & Login</div>
+        <div class="pg-desc">View ID card, covered services, submitted claims via Member Portal.</div>
+      </div>
+      <div class="pg-card">
+        <div class="pg-source seed">Seed kb_004</div>
+        <div class="pg-ttl">Find a Dentist</div>
+        <div class="pg-desc">In-network provider search by location using public Find a Dentist tool.</div>
+      </div>
+      <div class="pg-card">
+        <div class="pg-source seed">Seed kb_005</div>
+        <div class="pg-ttl">Teledentistry & Emergencies</div>
+        <div class="pg-desc">24/7 licensed dentist consultation at no cost for Liberty members.</div>
+      </div>
+      <div class="pg-card">
+        <div class="pg-source seed">Seed kb_006</div>
+        <div class="pg-ttl">Provider Guidance</div>
+        <div class="pg-desc">Join network, claims processing, dedicated Provider Relations, Provider Portal.</div>
+      </div>
+      <div class="pg-card">
+        <div class="pg-source seed">Seed kb_007</div>
+        <div class="pg-ttl">Broker Guidance</div>
+        <div class="pg-desc">Selling competitive plans, low costs, state selection, client services contact.</div>
+      </div>
+      <div class="pg-card">
+        <div class="pg-source seed">Seed kb_008</div>
+        <div class="pg-ttl">Grievance or Appeal</div>
+        <div class="pg-desc">Forms and instructions for filing a grievance or appeal on the website.</div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ── Links ── -->
+  <div class="sec">
+    <div class="sec-lbl">Section 02</div>
+    <div class="sec-ttl">13 Links in PUBLIC_LINKS — Which Ones Actually Appear</div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-n">13</div>
+        <div class="stat-lbl">Total links in PUBLIC_LINKS dictionary</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n">10</div>
+        <div class="stat-lbl">Can appear from AI-generated answers</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n" style="color:var(--amber);">2</div>
+        <div class="stat-lbl">Appear only in hardcoded fallback responses</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n" style="color:var(--red);">1</div>
+        <div class="stat-lbl">Never shown anywhere (Home)</div>
+      </div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Link Name</th>
+            <th>Shown from AI Answer?</th>
+            <th>Trigger Word(s) in Answer or Question</th>
+            <th>Also Hardcoded in?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Find a Dentist</strong></td>
+            <td><span class="pill yes">✓ Yes</span></td>
+            <td><span class="pill kw">find</span> <span class="pill kw">dentist</span> (both must appear)</td>
+            <td>Capabilities response</td>
+          </tr>
+          <tr>
+            <td><strong>Member Login</strong></td>
+            <td><span class="pill yes">✓ Yes</span></td>
+            <td><span class="pill kw">login</span> OR <span class="pill kw">portal</span></td>
+            <td>Restricted + no-match fallback</td>
+          </tr>
+          <tr>
+            <td><strong>Mobile App (Apple)</strong></td>
+            <td><span class="pill yes">✓ Yes</span></td>
+            <td><span class="pill kw">app</span> OR <span class="pill kw">download</span></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><strong>Mobile App (Android)</strong></td>
+            <td><span class="pill yes">✓ Yes</span></td>
+            <td><span class="pill kw">app</span> OR <span class="pill kw">download</span> (same as Apple)</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><strong>Teledentistry</strong></td>
+            <td><span class="pill yes">✓ Yes</span></td>
+            <td><span class="pill kw">teledentistry</span> OR <span class="pill kw">emergency</span></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><strong>Shop Plans</strong></td>
+            <td><span class="pill yes">✓ Yes</span></td>
+            <td><span class="pill kw">shop</span> OR <span class="pill kw">buy</span> OR <span class="pill kw">individual</span></td>
+            <td>Capabilities response</td>
+          </tr>
+          <tr>
+            <td><strong>Join Provider Network</strong></td>
+            <td><span class="pill yes">✓ Yes</span></td>
+            <td><span class="pill kw">provider</span> OR <span class="pill kw">join</span></td>
+            <td>Capabilities response</td>
+          </tr>
+          <tr>
+            <td><strong>Brokers</strong></td>
+            <td><span class="pill yes">✓ Yes</span></td>
+            <td><span class="pill kw">broker</span></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><strong>Broker Contact</strong></td>
+            <td><span class="pill yes">✓ Yes</span></td>
+            <td><span class="pill kw">broker</span> (same trigger — both always show)</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><strong>File a Grievance or Appeal</strong></td>
+            <td><span class="pill yes">✓ Yes</span></td>
+            <td><span class="pill kw">grievance</span> OR <span class="pill kw">appeal</span></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><strong>Contact Liberty</strong></td>
+            <td><span class="pill no">✗ No</span></td>
+            <td>—</td>
+            <td>Restricted + no-match fallback only</td>
+          </tr>
+          <tr>
+            <td><strong>Members</strong></td>
+            <td><span class="pill no">✗ No</span></td>
+            <td>—</td>
+            <td>Capabilities response only</td>
+          </tr>
+          <tr>
+            <td><strong>Home</strong></td>
+            <td><span class="pill no" style="background:var(--red-bg);color:var(--red);">✗ Never</span></td>
+            <td>—</td>
+            <td>Not used anywhere</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert info" style="margin-top:14px;">
+      <span class="alert-icon">ℹ️</span>
+      <div><strong>How the 10 AI-answer links work:</strong> After Llama generates the answer, the code scans the answer text + the original question for trigger words. If "broker" appears anywhere, both Brokers + Broker Contact show. If "app" appears, both Apple + Android links show. A single answer can show up to 10 links at once if the answer touches every topic.</div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ── What to fix ── -->
+  <div class="sec">
+    <div class="sec-lbl">Section 03</div>
+    <div class="sec-ttl">What Needs to Be Fixed for Full Contentful Coverage</div>
+
+    <div class="flow">
+      <div class="fl-step">
+        <div class="fl-label">Problem 1</div>
+        <div class="fl-note">Main public pages not in Contentful — only Medicaid pages. Add more pages in Contentful CMS or expand seed data.</div>
+      </div>
+      <div class="fl-step">
+        <div class="fl-label">Problem 2</div>
+        <div class="fl-note">Body content lives in section entries (linked by ID). Pipeline must fetch those linked entries to get real page text.</div>
+      </div>
+      <div class="fl-step">
+        <div class="fl-label">Problem 3</div>
+        <div class="fl-note">inspect_content.py uses no pagination — misses entries beyond first 100. Already fixed in data_pipeline.py.</div>
+      </div>
+      <div class="fl-step">
+        <div class="fl-label">Problem 4</div>
+        <div class="fl-note">Home link is dead code in PUBLIC_LINKS — no trigger ever adds it. Either remove it or add a homepage trigger.</div>
+      </div>
+    </div>
+
+    <div class="alert good">
+      <span class="alert-icon">✅</span>
+      <div><strong>What IS working correctly:</strong> The 8 seed items cover all main user flows (find dentist, login, app, plans, teledentistry, provider, broker, grievance). All 10 link triggers are correctly wired. Semantic search, score threshold, and Llama 3.3 70B are all properly configured. The chatbot gives correct answers for its 8 core topics.</div>
+    </div>
+  </div>
+
+</div>

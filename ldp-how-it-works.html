@@ -1,0 +1,559 @@
+<title>How the LDP Chatbot Works</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue:     #005eb8;
+  --blue-d:   #004490;
+  --blue-lt:  #ddeaf8;
+  --teal:     #006e6e;
+  --teal-lt:  #d9f0f0;
+  --amber:    #c97a1a;
+  --amber-lt: #fdf0df;
+  --bg:       #f0f5fb;
+  --surface:  #ffffff;
+  --ink:      #0d1e30;
+  --mid:      #496070;
+  --faint:    #8daabb;
+  --border:   #d0dcea;
+  --green:    #0a8f65;
+  --red:      #b83232;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+body {
+  font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.wrap { max-width: 920px; margin: 0 auto; padding: 48px 20px 80px; }
+
+/* ── Page header ── */
+.pg-head { margin-bottom: 40px; }
+.pg-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 1.4px;
+  text-transform: uppercase; color: var(--blue);
+  margin-bottom: 8px;
+}
+.pg-title {
+  font-size: 24px; font-weight: 800; letter-spacing: -0.5px;
+  color: var(--ink); line-height: 1.2; text-wrap: balance;
+  margin-bottom: 10px;
+}
+.pg-sub { font-size: 14px; color: var(--mid); max-width: 560px; }
+
+/* ── Pipeline canvas ── */
+.pipeline-wrap {
+  background: var(--ink);
+  border-radius: 12px;
+  padding: 28px 24px;
+  margin-bottom: 40px;
+  overflow-x: auto;
+}
+.pipeline-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+  text-transform: uppercase; color: var(--faint);
+  margin-bottom: 16px;
+}
+.pipeline {
+  display: flex; align-items: center; gap: 0;
+  min-width: 560px;
+}
+.pnode {
+  flex: 1; min-width: 90px;
+  background: #1a2d3f;
+  border: 1px solid #2a4055;
+  border-radius: 8px;
+  padding: 12px 10px;
+  text-align: center;
+  position: relative;
+}
+.pnode-icon { font-size: 18px; margin-bottom: 4px; display: block; }
+.pnode-name {
+  font-size: 11px; font-weight: 700; color: #e2eaf3;
+  line-height: 1.2;
+}
+.pnode-sub { font-size: 10px; color: #6a8ea8; margin-top: 3px; }
+
+.parrow {
+  flex-shrink: 0; width: 28px; text-align: center;
+  color: #3a5570; font-size: 16px; font-weight: 700;
+  position: relative; overflow: hidden;
+}
+.parrow::after {
+  content: '';
+  display: block;
+  width: 6px; height: 6px;
+  background: var(--blue);
+  border-radius: 50%;
+  position: absolute;
+  top: 50%; left: -6px;
+  transform: translateY(-50%);
+  animation: slideDot 2s linear infinite;
+}
+@keyframes slideDot {
+  0%   { left: -6px; opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { left: calc(100% + 6px); opacity: 0; }
+}
+
+.pnode.blue  { border-color: #1a4a8a; background: #0d2a4a; }
+.pnode.teal  { border-color: #0a4040; background: #062828; }
+.pnode.amber { border-color: #5a3a10; background: #3a2408; }
+.pnode.blue  .pnode-name { color: #90c4f8; }
+.pnode.teal  .pnode-name { color: #6ee0d8; }
+.pnode.amber .pnode-name { color: #f5c070; }
+
+.pipeline-row { margin-bottom: 14px; }
+.pipeline-row:last-child { margin-bottom: 0; }
+
+/* ── Two-col layout ── */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 32px;
+}
+@media (max-width: 620px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ── Flow panels ── */
+.flow-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.flow-header {
+  padding: 14px 18px;
+  font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; gap: 8px;
+}
+.flow-header.blue  { background: var(--blue-lt);  color: var(--blue-d); border-bottom: 1px solid #c0d8f0; }
+.flow-header.teal  { background: var(--teal-lt);  color: var(--teal);   border-bottom: 1px solid #b0dada; }
+.flow-header.amber { background: var(--amber-lt); color: var(--amber);  border-bottom: 1px solid #ead0a0; }
+.flow-body { padding: 16px 18px; }
+
+/* ── Steps ── */
+.step-list { display: flex; flex-direction: column; gap: 14px; }
+.step {
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.step-num {
+  flex-shrink: 0;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  font-size: 11px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 1px;
+}
+.step-num.blue  { background: var(--blue);  color: #fff; }
+.step-num.teal  { background: var(--teal);  color: #fff; }
+.step-num.amber { background: var(--amber); color: #fff; }
+.step-content {}
+.step-title { font-size: 13px; font-weight: 700; color: var(--ink); }
+.step-desc  { font-size: 12.5px; color: var(--mid); margin-top: 2px; line-height: 1.5; }
+.step-tag {
+  display: inline-block; font-size: 10.5px; font-weight: 600;
+  padding: 1px 7px; border-radius: 3px; margin-top: 4px;
+  font-family: monospace;
+}
+.step-tag.blue  { background: var(--blue-lt);  color: var(--blue); }
+.step-tag.teal  { background: var(--teal-lt);  color: var(--teal); }
+.step-tag.amber { background: var(--amber-lt); color: var(--amber); }
+
+/* ── Data source table ── */
+.source-table {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden; margin-bottom: 32px;
+}
+.source-header {
+  background: var(--ink); color: #fff;
+  display: grid; grid-template-columns: 2fr 1fr 1fr 2fr;
+  gap: 0;
+}
+.source-header span {
+  padding: 10px 14px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+}
+.source-row {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 2fr;
+  border-bottom: 1px solid var(--border);
+  font-size: 12.5px;
+}
+.source-row:last-child { border-bottom: none; }
+.source-row:nth-child(even) { background: #f7fafd; }
+.source-row span {
+  padding: 9px 14px;
+  display: flex; align-items: center;
+}
+.src-ct { font-family: monospace; font-size: 12px; color: var(--blue); font-weight: 600; }
+.num { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ink); }
+.pill {
+  display: inline-block; font-size: 10.5px; font-weight: 600;
+  padding: 2px 8px; border-radius: 12px;
+}
+.pill.hi   { background: #d4f5e7; color: var(--green); }
+.pill.med  { background: var(--amber-lt); color: var(--amber); }
+
+/* ── Guard section ── */
+.guard-wrap {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden; margin-bottom: 32px;
+}
+.guard-title {
+  padding: 13px 18px;
+  background: #f7fafd;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px; font-weight: 700; color: var(--ink);
+}
+.guard-body { padding: 16px 18px; }
+.guard-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+@media (max-width: 580px) { .guard-grid { grid-template-columns: 1fr; } }
+.guard-card {
+  border-radius: 8px; padding: 13px 14px;
+  border-left: 3px solid;
+}
+.guard-card.l1 { background: #fff0f0; border-color: var(--red); }
+.guard-card.l2 { background: var(--amber-lt); border-color: var(--amber); }
+.guard-card.l3 { background: var(--blue-lt); border-color: var(--blue); }
+.guard-lbl { font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
+.guard-card.l1 .guard-lbl { color: var(--red); }
+.guard-card.l2 .guard-lbl { color: var(--amber); }
+.guard-card.l3 .guard-lbl { color: var(--blue); }
+.guard-card .gtitle { font-size: 12.5px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+.guard-card .gdesc  { font-size: 12px; color: var(--mid); line-height: 1.45; }
+.guard-example {
+  font-size: 11.5px; font-style: italic;
+  background: rgba(255,255,255,0.7); border-radius: 4px;
+  padding: 5px 8px; margin-top: 6px; color: var(--mid);
+}
+
+/* ── Callout ── */
+.callout {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 12px 16px; border-radius: 8px; font-size: 13px; line-height: 1.5;
+  margin-bottom: 12px;
+}
+.callout.info { background: var(--blue-lt); color: #1a3a6e; }
+.callout.safe { background: #d4f5e7; color: #054030; }
+.ci { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+/* ── Score bar ── */
+.score-demo {
+  background: #f7fafd; border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px 16px; margin-top: 8px;
+}
+.score-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.score-row:last-child { margin-bottom: 0; }
+.score-label { font-size: 11.5px; color: var(--mid); width: 110px; flex-shrink: 0; }
+.score-bar-wrap { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.score-bar { height: 100%; border-radius: 4px; }
+.score-val { font-size: 11.5px; font-weight: 700; font-variant-numeric: tabular-nums; width: 36px; text-align: right; }
+.score-status { font-size: 10.5px; font-weight: 600; width: 60px; }
+
+hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+code { font-family: monospace; font-size: 12px; background: var(--blue-lt); padding: 1px 5px; border-radius: 3px; color: var(--blue-d); }
+</style>
+
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="pg-head">
+    <div class="pg-eyebrow">Liberty Dental Plan — AI Chatbot</div>
+    <div class="pg-title">How it works — where data comes from, how it fetches, how answers are built</div>
+    <div class="pg-sub">A plain-language walkthrough of the full pipeline: from Contentful CMS to a chatbot answer.</div>
+  </div>
+
+
+  <!-- ── Pipeline diagram ── -->
+  <div class="pipeline-wrap">
+    <div class="pipeline-label">① Indexing Pipeline — runs once via data_pipeline.py</div>
+    <div class="pipeline pipeline-row">
+      <div class="pnode blue">
+        <span class="pnode-icon">📝</span>
+        <div class="pnode-name">Contentful CMS</div>
+        <div class="pnode-sub">496 documents</div>
+      </div>
+      <div class="parrow">→</div>
+      <div class="pnode blue">
+        <span class="pnode-icon">⚙️</span>
+        <div class="pnode-name">data_pipeline.py</div>
+        <div class="pnode-sub">reads + cleans text</div>
+      </div>
+      <div class="parrow">→</div>
+      <div class="pnode blue">
+        <span class="pnode-icon">🔢</span>
+        <div class="pnode-name">Embedding model</div>
+        <div class="pnode-sub">text → 384 numbers</div>
+      </div>
+      <div class="parrow">→</div>
+      <div class="pnode blue">
+        <span class="pnode-icon">🗄️</span>
+        <div class="pnode-name">Pinecone DB</div>
+        <div class="pnode-sub">496 vectors stored</div>
+      </div>
+    </div>
+
+    <div class="pipeline-label" style="margin-top:20px;">② Query Pipeline — runs on every user message</div>
+    <div class="pipeline pipeline-row">
+      <div class="pnode teal">
+        <span class="pnode-icon">💬</span>
+        <div class="pnode-name">User question</div>
+        <div class="pnode-sub">typed in chat</div>
+      </div>
+      <div class="parrow">→</div>
+      <div class="pnode teal">
+        <span class="pnode-icon">🔢</span>
+        <div class="pnode-name">Embed question</div>
+        <div class="pnode-sub">same model</div>
+      </div>
+      <div class="parrow">→</div>
+      <div class="pnode teal">
+        <span class="pnode-icon">🔍</span>
+        <div class="pnode-name">Pinecone search</div>
+        <div class="pnode-sub">top 6 matches</div>
+      </div>
+      <div class="parrow">→</div>
+      <div class="pnode teal">
+        <span class="pnode-icon">🦙</span>
+        <div class="pnode-name">Llama 3.3 70B</div>
+        <div class="pnode-sub">generates answer</div>
+      </div>
+      <div class="parrow">→</div>
+      <div class="pnode amber">
+        <span class="pnode-icon">✅</span>
+        <div class="pnode-name">Answer + links</div>
+        <div class="pnode-sub">shown to user</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── Two flows side by side ── -->
+  <div class="two-col">
+
+    <!-- Indexing flow -->
+    <div class="flow-panel">
+      <div class="flow-header blue">📥 How data gets INTO Pinecone</div>
+      <div class="flow-body">
+        <div class="step-list">
+          <div class="step">
+            <div class="step-num blue">1</div>
+            <div class="step-content">
+              <div class="step-title">Read Contentful CMS</div>
+              <div class="step-desc"><code>data_pipeline.py</code> connects to the Liberty Dental Contentful space and fetches 4 content types with a 30-second timeout per page.</div>
+              <span class="step-tag blue">content_type=section, accordion, page, card</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num blue">2</div>
+            <div class="step-content">
+              <div class="step-title">Extract plain text</div>
+              <div class="step-desc">Rich text fields (formatted paragraphs, headings, bullet lists) are recursively converted to plain strings. Empty or very short entries are skipped.</div>
+              <span class="step-tag blue">extract_rich_text(node)</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num blue">3</div>
+            <div class="step-content">
+              <div class="step-title">Convert text to vectors</div>
+              <div class="step-desc">The <code>all-MiniLM-L6-v2</code> model converts each document's text into 384 numbers (a vector). Similar meanings produce similar vectors — this is what enables semantic search.</div>
+              <span class="step-tag blue">SentenceTransformer.encode()</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num blue">4</div>
+            <div class="step-content">
+              <div class="step-title">Store in Pinecone</div>
+              <div class="step-desc">Each vector is stored in Pinecone alongside the original text (as metadata). 496 documents are uploaded in batches of 50.</div>
+              <span class="step-tag blue">index.upsert(vectors=records)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Query flow -->
+    <div class="flow-panel">
+      <div class="flow-header teal">💬 How a question gets answered</div>
+      <div class="flow-body">
+        <div class="step-list">
+          <div class="step">
+            <div class="step-num teal">1</div>
+            <div class="step-content">
+              <div class="step-title">User types a question</div>
+              <div class="step-desc">The question enters the routing engine. Three checks happen before Pinecone is ever called.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num teal">2</div>
+            <div class="step-content">
+              <div class="step-title">3 routing checks (no AI)</div>
+              <div class="step-desc">Personal data words → blocked instantly. "What can you do?" → hardcoded capabilities list. Everything else passes to Pinecone.</div>
+              <span class="step-tag teal">has_restricted_request() · is_capabilities_request()</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num teal">3</div>
+            <div class="step-content">
+              <div class="step-title">Embed the question</div>
+              <div class="step-desc">The same <code>all-MiniLM-L6-v2</code> model converts the question into a 384-number vector so it can be compared with stored document vectors.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num teal">4</div>
+            <div class="step-content">
+              <div class="step-title">Search Pinecone (semantic)</div>
+              <div class="step-desc">Pinecone finds the 6 most similar document vectors. If the best match scores below 0.45 out of 1.0, the bot says it can't find an answer.</div>
+              <span class="step-tag teal">top_k=6 · score ≥ 0.45</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num teal">5</div>
+            <div class="step-content">
+              <div class="step-title">Llama 3.3 70B generates answer</div>
+              <div class="step-desc">The matched document text is sent to Llama as context. Llama can ONLY answer from that context — it cannot add information from outside it.</div>
+              <span class="step-tag teal">max_tokens=600 · temp=0.3</span>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num teal">6</div>
+            <div class="step-content">
+              <div class="step-title">Links added by keyword scan</div>
+              <div class="step-desc">The answer text is scanned for words like "dentist", "app", "portal", "broker". Matching links from the 13-link dictionary are attached below the answer.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ── Data sources ── -->
+  <div class="source-table">
+    <div class="source-header">
+      <span>Content Type</span>
+      <span>Count</span>
+      <span>With text</span>
+      <span>What it contains</span>
+    </div>
+    <div class="source-row">
+      <span class="src-ct">section</span>
+      <span class="num">509</span>
+      <span><span class="pill hi">127</span></span>
+      <span style="color:var(--mid);">Page body text — paragraphs, descriptions, bullet points from every website section</span>
+    </div>
+    <div class="source-row">
+      <span class="src-ct">card</span>
+      <span class="num">323</span>
+      <span><span class="pill hi">195</span></span>
+      <span style="color:var(--mid);">Plan feature cards, service highlights, benefit descriptions</span>
+    </div>
+    <div class="source-row">
+      <span class="src-ct">page</span>
+      <span class="num">230</span>
+      <span><span class="pill hi">105</span></span>
+      <span style="color:var(--mid);">SEO titles and meta descriptions for all 230 website pages</span>
+    </div>
+    <div class="source-row">
+      <span class="src-ct">accordion</span>
+      <span class="num">209</span>
+      <span><span class="pill med">61</span></span>
+      <span style="color:var(--mid);">FAQ pairs — question as title, answer as rich text. 148 are nav headers with no answer text.</span>
+    </div>
+    <div class="source-row" style="background:#f4f8ff;">
+      <span style="color:var(--mid); font-style:italic;">seed data (hardcoded)</span>
+      <span class="num">8</span>
+      <span><span class="pill hi">8</span></span>
+      <span style="color:var(--mid);">Core flows: find dentist, login, app, plans, teledentistry, provider, broker, grievance</span>
+    </div>
+    <div class="source-row" style="background:#f0f7ff; font-weight:700;">
+      <span style="color:var(--blue);">TOTAL in Pinecone</span>
+      <span class="num" style="color:var(--blue);">496</span>
+      <span class="num" style="color:var(--blue);">496</span>
+      <span style="color:var(--blue);">All indexed and searchable by the chatbot</span>
+    </div>
+  </div>
+
+
+  <!-- ── Semantic search explained ── -->
+  <div class="flow-panel" style="margin-bottom:20px;">
+    <div class="flow-header blue">🔍 Why "semantic" search, not keyword search</div>
+    <div class="flow-body">
+      <div class="callout info">
+        <span class="ci">ℹ️</span>
+        <span>Keyword search only finds exact word matches. Semantic search understands <strong>meaning</strong> — so "tooth pain" finds the "Teledentistry & Emergencies" document even though neither word appears in the document title.</span>
+      </div>
+      <div style="font-size:12.5px; font-weight:700; color:var(--mid); margin-bottom:10px;">How the 0.45 score threshold works:</div>
+      <div class="score-demo">
+        <div class="score-row">
+          <div class="score-label">Find a dentist</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:87%; background:var(--green);"></div></div>
+          <div class="score-val" style="color:var(--green);">0.87</div>
+          <div class="score-status" style="color:var(--green); font-size:11px;">✓ Answered</div>
+        </div>
+        <div class="score-row">
+          <div class="score-label">How do I join?</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:72%; background:var(--teal);"></div></div>
+          <div class="score-val" style="color:var(--teal);">0.72</div>
+          <div class="score-status" style="color:var(--teal); font-size:11px;">✓ Answered</div>
+        </div>
+        <div class="score-row">
+          <div class="score-label">Vague question</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:38%; background:var(--amber);"></div></div>
+          <div class="score-val" style="color:var(--amber);">0.38</div>
+          <div class="score-status" style="color:var(--amber); font-size:11px;">✗ Blocked</div>
+        </div>
+        <div class="score-row">
+          <div class="score-label">Off-topic question</div>
+          <div class="score-bar-wrap"><div class="score-bar" style="width:12%; background:var(--red);"></div></div>
+          <div class="score-val" style="color:var(--red);">0.12</div>
+          <div class="score-status" style="color:var(--red); font-size:11px;">✗ Blocked</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── 3 routing guards ── -->
+  <div class="guard-wrap">
+    <div class="guard-title">🛡️ 3 Routing Guards — checked before Pinecone is ever called</div>
+    <div class="guard-body">
+      <div class="guard-grid">
+        <div class="guard-card l1">
+          <div class="guard-lbl">Guard 1 — Blocked</div>
+          <div class="gtitle">Personal data request</div>
+          <div class="gdesc">Instantly redirects to Member Portal. No AI involved.</div>
+          <div class="guard-example">"What is my member ID?" "Check my claim" "My SSN" "My benefits"</div>
+        </div>
+        <div class="guard-card l2">
+          <div class="guard-lbl">Guard 2 — Hardcoded</div>
+          <div class="gtitle">Capabilities question</div>
+          <div class="gdesc">Returns fixed list of what the bot can help with.</div>
+          <div class="guard-example">"What can you do?" "How can you help me?" "Who are you?"</div>
+        </div>
+        <div class="guard-card l3">
+          <div class="guard-lbl">Guard 3 — AI search</div>
+          <div class="gtitle">All other questions</div>
+          <div class="gdesc">Goes to Pinecone → Llama. Answer from CMS content only.</div>
+          <div class="guard-example">"Find a dentist" "How do I download the app?" "What plans do you offer?"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Safety ── -->
+  <div class="callout safe">
+    <span class="ci">✅</span>
+    <div><strong>Why no personal data ever comes out:</strong> Contentful is a public website CMS — it stores page copy, FAQs, and plan descriptions, not member records or account data. Even if someone asked for personal data, there is nothing personal in the 496 indexed documents for Llama to return. Guard 1 blocks the question anyway, as a second layer.</div>
+  </div>
+
+</div>
