@@ -72,7 +72,7 @@ Open your browser at: **http://localhost:8501**
 ### 5. Open the widget demo
 
 Open `chatbot-widget-demo.html` directly in your browser (double-click the file).  
-The floating chat icon will appear bottom-left. Click it to open the chatbot panel.
+The floating chat icon will appear bottom-right. Click it to open the chatbot panel.
 
 > **Note:** Streamlit must be running (`streamlit run app.py`) before opening the widget demo, otherwise the panel will show a loading spinner.
 

@@ -221,7 +221,7 @@ footer { background: #1b2161; color: rgba(255,255,255,0.65); padding: 28px 48px;
 #chat-btn {
   position: fixed;
   bottom: 32px;
-  left: 32px;
+  right: 32px;
   width: 62px;
   height: 62px;
   background: #1b2161;
@@ -276,7 +276,7 @@ footer { background: #1b2161; color: rgba(255,255,255,0.65); padding: 28px 48px;
 #chat-tooltip {
   position: fixed;
   bottom: 44px;
-  left: 104px;
+  right: 104px;
   background: #1b2161;
   color: white;
   font-size: 13px;
@@ -292,28 +292,28 @@ footer { background: #1b2161; color: rgba(255,255,255,0.65); padding: 28px 48px;
 #chat-tooltip::before {
   content: '';
   position: absolute;
-  left: -5px; top: 50%;
+  right: -5px; top: 50%;
   transform: translateY(-50%);
   border: 5px solid transparent;
-  border-right-color: #1b2161;
-  border-left: 0;
+  border-left-color: #1b2161;
+  border-right: 0;
 }
 #chat-tooltip.hidden { opacity: 0; pointer-events: none; }
 
-/* Panel — slides in from LEFT */
+/* Panel — slides in from RIGHT */
 #chat-panel {
   position: fixed;
   top: 0;
-  left: 0;
+  right: 0;
   width: 400px;
   height: 100vh;
   background: white;
   z-index: 1090;
   display: flex;
   flex-direction: column;
-  transform: translateX(-100%);
+  transform: translateX(100%);
   transition: transform 0.33s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 5px 0 40px rgba(0,0,0,0.18);
+  box-shadow: -5px 0 40px rgba(0,0,0,0.18);
 }
 #chat-panel.open { transform: translateX(0); }
 
