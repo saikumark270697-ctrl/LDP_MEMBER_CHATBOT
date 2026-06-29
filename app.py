@@ -456,7 +456,7 @@ def main():
                 st.markdown(format_links(msg["links"]), unsafe_allow_html=True)
 
     # Chat Input
-    if prompt := st.chat_input("Type your question here... (e.g., 'How do I download the app?')"):
+    if prompt := st.chat_input("Ask me anything about your dental plan…"):
         handle_user_input(prompt)
 
 
