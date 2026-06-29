@@ -303,10 +303,13 @@ footer { background: #1b2161; color: rgba(255,255,255,0.65); padding: 28px 48px;
 /* ── Floating chat panel (card style) ── */
 #chat-panel {
   position: fixed;
-  bottom: 100px;
+  bottom: 96px;
   right: 28px;
   width: 400px;
-  height: 580px;
+  /* Always fit inside the viewport — shrinks on short screens */
+  height: calc(100vh - 120px);
+  max-height: 620px;
+  min-height: 360px;
   background: #f8fafc;
   z-index: 1090;
   display: flex;
@@ -325,6 +328,7 @@ footer { background: #1b2161; color: rgba(255,255,255,0.65); padding: 28px 48px;
     opacity   0.22s ease,
     width     0.3s cubic-bezier(0.4,0,0.2,1),
     height    0.3s cubic-bezier(0.4,0,0.2,1),
+    max-height 0.3s cubic-bezier(0.4,0,0.2,1),
     bottom    0.3s cubic-bezier(0.4,0,0.2,1),
     right     0.3s cubic-bezier(0.4,0,0.2,1);
 }
@@ -334,10 +338,11 @@ footer { background: #1b2161; color: rgba(255,255,255,0.65); padding: 28px 48px;
   pointer-events: auto;
 }
 #chat-panel.expanded {
-  width: 620px;
-  height: calc(100vh - 48px);
-  bottom: 24px;
-  right: 24px;
+  width: min(640px, calc(100vw - 48px));
+  height: calc(100vh - 32px);
+  max-height: calc(100vh - 32px);
+  bottom: 16px;
+  right: 16px;
   border-radius: 20px;
 }
 
@@ -438,13 +443,23 @@ footer { background: #1b2161; color: rgba(255,255,255,0.65); padding: 28px 48px;
 #overlay.open { opacity: 1; pointer-events: auto; }
 
 @media (max-width: 480px) {
-  #chat-panel, #chat-panel.expanded {
-    width: calc(100vw - 20px);
-    height: calc(100vh - 100px);
-    right: 10px;
-    bottom: 90px;
+  #chat-panel {
+    width: calc(100vw - 16px);
+    height: calc(100vh - 110px);
+    max-height: none;
+    right: 8px;
+    bottom: 88px;
     border-radius: 16px;
   }
+  #chat-panel.expanded {
+    width: calc(100vw - 16px);
+    height: calc(100vh - 20px);
+    max-height: none;
+    right: 8px;
+    bottom: 10px;
+    border-radius: 16px;
+  }
+  #chat-btn { bottom: 20px; right: 20px; }
 }
 </style>
 </head>
