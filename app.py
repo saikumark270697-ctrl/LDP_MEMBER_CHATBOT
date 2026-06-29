@@ -380,24 +380,43 @@ def main():
 
     # Sidebar Configuration
     with st.sidebar:
-        st.image("https://www.libertydentalplan.com/Images/Liberty-Dental-Plan-Logo.png", width=200)
-        st.markdown("### Manager's Overview")
-        st.info(
-            "**End-User Personas Handled:**\n\n"
-            "This POC is specifically tuned to the highest-value actions on the public UAT website:\n\n"
-            "👤 **Members:** Find a dentist, Member Login, App Download, Teledentistry\n"
-            "🛒 **Shoppers:** View plans & Benefits\n"
-            "⚕️ **Providers:** Join network, Portal access\n"
-            "🤝 **Brokers:** Get quotes"
+        st.markdown(
+            """
+            <div style="display:flex;align-items:center;gap:10px;padding:12px 0 20px 0;">
+                <span style="font-size:2.2rem;">🦷</span>
+                <div>
+                    <div style="font-weight:800;font-size:1rem;color:#1a2060;line-height:1.2;">Liberty Dental Plan</div>
+                    <div style="font-size:0.75rem;color:#64748b;">AI Assistant</div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        st.markdown("### How can I help?")
+        st.markdown(
+            "Ask me anything about Liberty Dental Plan — I'll find the answer for you."
         )
         st.markdown("---")
-        st.markdown("### Technical Architecture")
-        st.caption(
-            "Connected directly to **Contentful CMS** for live knowledge extraction. "
-            "Contexts are retrieved via semantic search using **Pinecone** and responses are generated in a human-like tone using **Llama 3.3 70B** via Groq."
+
+        st.markdown("**I can help with:**")
+        st.markdown(
+            "- 🦷 Finding an in-network dentist\n"
+            "- 🔒 Member Portal login\n"
+            "- 📱 Mobile app download\n"
+            "- 🚨 Dental emergencies\n"
+            "- 🛒 Shopping for a plan\n"
+            "- ⚕️ Joining our provider network\n"
+            "- 🤝 Broker information"
         )
-        
-        if st.button("🔄 Reset Conversation", type="primary"):
+        st.markdown("---")
+        st.caption(
+            "💡 **Tip:** I only have access to public Liberty Dental Plan information. "
+            "For personal account details, please log in to the Member Portal."
+        )
+        st.markdown("")
+
+        if st.button("🔄 New Conversation", type="primary"):
             st.session_state.messages = []
             st.rerun()
             
