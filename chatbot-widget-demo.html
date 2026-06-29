@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Liberty Dental Plan</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
+  background: #f5f7fa;
+  overflow-x: hidden;
+}
+
+/* ─────────────────────────────────────────
+   SIMULATED LDP WEBSITE
+───────────────────────────────────────── */
+
+/* Top bar */
+.top-bar {
+  background: #fff;
+  border-bottom: 1px solid #e0e4ec;
+  padding: 8px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #444;
+}
+.top-bar a { color: #444; text-decoration: none; display: flex; align-items: center; gap: 5px; }
+
+/* Nav */
+.navbar {
+  background: #1a2060;
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: 68px;
+}
+.navbar .logo {
+  display: flex; align-items: center; gap: 10px;
+  color: white; font-weight: 800; font-size: 15px;
+  letter-spacing: 0.5px; margin-right: 40px;
+  text-transform: uppercase; line-height: 1.1;
+}
+.logo-box {
+  width: 44px; height: 44px;
+  background: white;
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.nav-links { display: flex; gap: 4px; flex: 1; }
+.nav-links a {
+  color: rgba(255,255,255,0.9);
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 15px;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+.nav-links a:hover { background: rgba(255,255,255,0.12); }
+.nav-right { display: flex; align-items: center; gap: 12px; }
+.search-box {
+  display: flex; align-items: center;
+  background: white; border-radius: 24px;
+  padding: 7px 16px; gap: 8px;
+  font-size: 14px; color: #888;
+  width: 200px;
+}
+.btn-dentist {
+  background: #005eb8;
+  color: white;
+  border: none; border-radius: 24px;
+  padding: 10px 20px;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+}
+
+/* Hero */
+.hero {
+  background: linear-gradient(rgba(20,26,80,0.45), rgba(20,26,80,0.45)),
+              url('https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=1400&q=80') center/cover no-repeat;
+  min-height: 420px;
+  display: flex; align-items: center;
+  padding: 60px 40px;
+}
+.hero-content { max-width: 520px; color: white; }
+.hero-content h1 {
+  font-size: 42px; font-weight: 800;
+  line-height: 1.15; margin-bottom: 16px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.hero-content p {
+  font-size: 16px; opacity: 0.9; margin-bottom: 28px; line-height: 1.5;
+}
+.btn-start {
+  background: #005eb8; color: white;
+  border: none; border-radius: 28px;
+  padding: 14px 32px; font-size: 16px; font-weight: 600;
+  cursor: pointer;
+}
+
+/* Content sections */
+.section { padding: 56px 40px; }
+.section-title {
+  font-size: 28px; font-weight: 700;
+  color: #1a2060; margin-bottom: 8px; text-align: center;
+}
+.section-sub {
+  font-size: 15px; color: #666; text-align: center; margin-bottom: 36px;
+}
+.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.card {
+  background: white; border-radius: 12px;
+  padding: 28px 20px; text-align: center;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  border: 1px solid #eef0f5;
+}
+.card-icon { font-size: 36px; margin-bottom: 12px; }
+.card-title { font-size: 16px; font-weight: 700; color: #1a2060; margin-bottom: 8px; }
+.card-desc { font-size: 13px; color: #666; line-height: 1.5; }
+.card-link {
+  display: inline-block; margin-top: 14px;
+  color: #005eb8; font-size: 13px; font-weight: 600;
+  text-decoration: none;
+}
+
+.section-alt { background: #f0f4fb; }
+.section-alt .section-title { color: #1a2060; }
+
+.stats { display: flex; gap: 0; }
+.stat-item {
+  flex: 1; text-align: center; padding: 24px;
+  border-right: 1px solid #dde4f0;
+}
+.stat-item:last-child { border-right: none; }
+.stat-n { font-size: 36px; font-weight: 800; color: #005eb8; }
+.stat-l { font-size: 13px; color: #666; margin-top: 4px; }
+
+/* Footer */
+footer {
+  background: #1a2060; color: rgba(255,255,255,0.7);
+  padding: 32px 40px; text-align: center; font-size: 13px;
+}
+
+
+/* ─────────────────────────────────────────
+   CHAT WIDGET
+───────────────────────────────────────── */
+
+/* Floating button — bottom LEFT */
+#chat-btn {
+  position: fixed;
+  bottom: 28px;
+  left: 28px;
+  width: 60px;
+  height: 60px;
+  background: #005eb8;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 94, 184, 0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+#chat-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 28px rgba(0, 94, 184, 0.65);
+}
+#chat-btn:focus { outline: 3px solid #90c0f0; }
+
+/* Icon inside button */
+.btn-icon-chat { display: block; }
+.btn-icon-close { display: none; }
+
+#chat-btn.open .btn-icon-chat { display: none; }
+#chat-btn.open .btn-icon-close { display: block; }
+
+/* Notification dot */
+.notif-dot {
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 12px; height: 12px;
+  background: #ff4757;
+  border-radius: 50%;
+  border: 2px solid white;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.25); opacity: 0.7; }
+}
+#chat-btn.open .notif-dot { display: none; }
+
+/* Tooltip */
+.chat-tooltip {
+  position: fixed;
+  bottom: 36px;
+  left: 98px;
+  background: #1a2060;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.2s;
+  z-index: 999;
+}
+.chat-tooltip::before {
+  content: '';
+  position: absolute;
+  left: -6px; top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-right-color: #1a2060;
+  border-left: 0;
+}
+.chat-tooltip.hidden { opacity: 0; }
+
+/* Chat panel — slides in from LEFT */
+#chat-panel {
+  position: fixed;
+  top: 0; left: 0;
+  width: 390px;
+  height: 100vh;
+  background: white;
+  box-shadow: 4px 0 32px rgba(0,0,0,0.18);
+  z-index: 998;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  border-right: 1px solid #dde4f0;
+}
+#chat-panel.open {
+  transform: translateX(0);
+}
+
+/* Panel header */
+.panel-header {
+  background: linear-gradient(135deg, #1a2060 0%, #005eb8 100%);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.panel-logo {
+  width: 36px; height: 36px;
+  background: white; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.panel-info { flex: 1; }
+.panel-title { color: white; font-size: 15px; font-weight: 700; }
+.panel-status { font-size: 11px; color: rgba(255,255,255,0.75); margin-top: 1px; display: flex; align-items: center; gap: 5px; }
+.status-dot { width: 7px; height: 7px; background: #2ecc71; border-radius: 50%; }
+.panel-close {
+  background: rgba(255,255,255,0.15);
+  border: none; border-radius: 6px;
+  color: white; width: 30px; height: 30px;
+  cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.panel-close:hover { background: rgba(255,255,255,0.25); }
+
+/* Panel iframe */
+#chat-frame {
+  flex: 1;
+  border: none;
+  width: 100%;
+  display: block;
+}
+
+/* Overlay (dim bg on mobile) */
+#overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 990;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.32s;
+}
+#overlay.open { opacity: 1; pointer-events: auto; }
+
+/* Responsive */
+@media (max-width: 480px) {
+  #chat-panel { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Simulated LDP website ── -->
+<div class="top-bar">
+  <a href="#">🌐 English ∨</a>
+  <a href="#">👤 Log in ∨</a>
+</div>
+
+<nav class="navbar">
+  <div class="logo">
+    <div class="logo-box">🦷</div>
+    <span>Liberty<br>Dental Plan.</span>
+  </div>
+  <div class="nav-links">
+    <a href="#">Members</a>
+    <a href="#">Providers</a>
+    <a href="#">Brokers</a>
+    <a href="#">About us</a>
+  </div>
+  <div class="nav-right">
+    <div class="search-box">🔍 Search</div>
+    <button class="btn-dentist">Find a dentist</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-content">
+    <h1>Making members shine,<br>one smile at a time™</h1>
+    <p>Are you a Liberty Dental Plan member?<br>Explore helpful resources to get the most from your plan.</p>
+    <button class="btn-start">Get started</button>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-title">How can we help you today?</div>
+  <div class="section-sub">Everything you need, all in one place.</div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-icon">🦷</div>
+      <div class="card-title">Find a Dentist</div>
+      <div class="card-desc">Search for in-network dental providers near you.</div>
+      <a class="card-link" href="#">Search now →</a>
+    </div>
+    <div class="card">
+      <div class="card-icon">📱</div>
+      <div class="card-title">Mobile App</div>
+      <div class="card-desc">Manage your plan on the go with our free mobile app.</div>
+      <a class="card-link" href="#">Download →</a>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔒</div>
+      <div class="card-title">Member Portal</div>
+      <div class="card-desc">Log in to view your ID card, claims, and benefits.</div>
+      <a class="card-link" href="#">Log in →</a>
+    </div>
+    <div class="card">
+      <div class="card-icon">💻</div>
+      <div class="card-title">Teledentistry</div>
+      <div class="card-desc">See a dentist online 24/7 at no extra cost to you.</div>
+      <a class="card-link" href="#">Get started →</a>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="stats">
+    <div class="stat-item">
+      <div class="stat-n">7M+</div>
+      <div class="stat-l">Members nationwide</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-n">119K+</div>
+      <div class="stat-l">In-network providers</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-n">38</div>
+      <div class="stat-l">States served</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-n">25+</div>
+      <div class="stat-l">Years of service</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  © 2026 Liberty Dental Plan. All rights reserved. · Privacy Policy · Terms of Use · Contact Us
+</footer>
+
+
+<!-- ── Chat widget ── -->
+
+<!-- Backdrop -->
+<div id="overlay" onclick="closeChat()"></div>
+
+<!-- Tooltip -->
+<div class="chat-tooltip" id="tooltip">Chat with our AI assistant</div>
+
+<!-- Floating button -->
+<button id="chat-btn" onclick="toggleChat()" aria-label="Open Liberty AI assistant">
+  <span class="notif-dot"></span>
+  <!-- Chat icon -->
+  <svg class="btn-icon-chat" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </svg>
+  <!-- Close icon -->
+  <svg class="btn-icon-close" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+    <line x1="18" y1="6" x2="6" y2="18"/>
+    <line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+</button>
+
+<!-- Chat panel -->
+<div id="chat-panel" role="dialog" aria-label="Liberty AI Assistant chat">
+  <div class="panel-header">
+    <div class="panel-logo">🦷</div>
+    <div class="panel-info">
+      <div class="panel-title">Liberty AI Assistant</div>
+      <div class="panel-status">
+        <span class="status-dot"></span>
+        Online · Powered by Llama 3.3 70B
+      </div>
+    </div>
+    <button class="panel-close" onclick="closeChat()" aria-label="Close chat">✕</button>
+  </div>
+  <iframe
+    id="chat-frame"
+    src="about:blank"
+    data-src="http://localhost:8501"
+    title="Liberty Dental Plan AI Assistant"
+    allow="clipboard-write"
+  ></iframe>
+</div>
+
+
+<script>
+  var isOpen = false;
+  var loaded = false;
+  var tooltip = document.getElementById('tooltip');
+  var btn = document.getElementById('chat-btn');
+  var panel = document.getElementById('chat-panel');
+  var overlay = document.getElementById('overlay');
+  var frame = document.getElementById('chat-frame');
+
+  // Hide tooltip after 4 seconds
+  setTimeout(function() {
+    tooltip.classList.add('hidden');
+  }, 4000);
+
+  function toggleChat() {
+    if (isOpen) { closeChat(); } else { openChat(); }
+  }
+
+  function openChat() {
+    isOpen = true;
+    btn.classList.add('open');
+    panel.classList.add('open');
+    overlay.classList.add('open');
+    tooltip.classList.add('hidden');
+
+    // Lazy-load the iframe the first time
+    if (!loaded) {
+      frame.src = frame.getAttribute('data-src');
+      loaded = true;
+    }
+  }
+
+  function closeChat() {
+    isOpen = false;
+    btn.classList.remove('open');
+    panel.classList.remove('open');
+    overlay.classList.remove('open');
+  }
+
+  // Close on Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && isOpen) closeChat();
+  });
+</script>
+
+</body>
+</html>
