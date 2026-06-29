@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Liberty Dental Plan</title>
+<script>
+  // ── CHANGE THIS to your Azure URL after deployment ──
+  // Local testing:  'http://localhost:8501'
+  // After Azure:    'https://your-app-name.azurewebsites.net'
+  var CHATBOT_URL = 'http://localhost:8501';
+</script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, 'Segoe UI', system-ui, Arial, sans-serif; background: #f5f7fa; overflow-x: hidden; }
@@ -349,6 +355,30 @@ footer { background: #1b2161; color: rgba(255,255,255,0.65); padding: 28px 48px;
 }
 .ph-close:hover { background: rgba(255,255,255,0.28); }
 
+/* Loading overlay inside panel */
+.panel-loading {
+  position: absolute;
+  inset: 72px 0 0 0;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  z-index: 2;
+  transition: opacity 0.3s;
+}
+.panel-loading.hidden { opacity: 0; pointer-events: none; }
+.spinner {
+  width: 38px; height: 38px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #1b2161;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 14px; color: #64748b; font-weight: 500; }
+
 /* iframe */
 #chat-frame {
   flex: 1;
@@ -515,25 +545,30 @@ footer { background: #1b2161; color: rgba(255,255,255,0.65); padding: 28px 48px;
     </div>
     <button type="button" class="ph-close" onclick="closeChat()" aria-label="Close">✕</button>
   </div>
+  <div class="panel-loading" id="panel-loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Connecting to Liberty AI…</div>
+  </div>
   <iframe
     id="chat-frame"
     src="about:blank"
-    data-src="http://localhost:8501"
     title="Liberty AI Assistant"
     allow="clipboard-write"
+    onload="frameLoaded()"
   ></iframe>
 </div>
 
 
 <script>
-var isOpen = false;
-var loaded = false;
+var isOpen  = false;
+var loaded  = false;
 
-var btn      = document.getElementById('chat-btn');
-var panel    = document.getElementById('chat-panel');
-var overlay  = document.getElementById('overlay');
-var frame    = document.getElementById('chat-frame');
-var tooltip  = document.getElementById('chat-tooltip');
+var btn     = document.getElementById('chat-btn');
+var panel   = document.getElementById('chat-panel');
+var overlay = document.getElementById('overlay');
+var frame   = document.getElementById('chat-frame');
+var tooltip = document.getElementById('chat-tooltip');
+var loading = document.getElementById('panel-loading');
 
 // Hide tooltip after 4s
 setTimeout(function () { tooltip.classList.add('hidden'); }, 4000);
@@ -549,9 +584,10 @@ function openChat() {
   overlay.classList.add('open');
   tooltip.classList.add('hidden');
 
-  // Lazy-load iframe first time
+  // Lazy-load iframe on first open
   if (!loaded) {
-    frame.src = frame.getAttribute('data-src');
+    loading.classList.remove('hidden');
+    frame.src = CHATBOT_URL;
     loaded = true;
   }
 }
@@ -561,6 +597,11 @@ function closeChat() {
   btn.classList.remove('open');
   panel.classList.remove('open');
   overlay.classList.remove('open');
+}
+
+function frameLoaded() {
+  // Hide spinner once iframe content loads
+  if (loading) loading.classList.add('hidden');
 }
 
 document.addEventListener('keydown', function (e) {
