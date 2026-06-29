@@ -1,15 +1,21 @@
+# Environment
 .env
 .env.*
 !.env.example
 
+# Python
 venv/
 .venv/
 __pycache__/
 *.py[cod]
 
+# Data dumps (run data_pipeline.py to rebuild Pinecone index)
+*.json
+
+# IDE / OS
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-
 .DS_Store
 Thumbs.db
+.agents/

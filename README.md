@@ -1,32 +1,116 @@
-# Liberty Dental Plan AI Chatbot POC
+# Liberty Dental Plan — AI Chatbot
 
-This is a Streamlit proof of concept for a Liberty Dental Plan public website AI chatbot.
+An AI-powered chatbot for the Liberty Dental Plan public website.  
+Answers questions about plans, providers, members, and brokers using content from Contentful CMS.
 
-## Scope
+## How it works
 
-- Answers only from public website / Contentful-style content included in the POC.
-- Helps users navigate member, provider, broker, teledentistry, grievance, and contact pages.
-- Redirects account-specific questions to secure portals.
-- Does not access personal member data, claims, eligibility, benefits, or secure systems.
+```
+Contentful CMS  →  data_pipeline.py  →  Pinecone (vectors)
+                                              ↓
+User question  →  Sentence Transformer  →  Pinecone search  →  Llama 3.3 70B  →  Answer
+```
+
+- **Knowledge base**: 496 documents from Contentful (sections, FAQs, pages, cards)
+- **Embedding model**: `all-MiniLM-L6-v2` (sentence-transformers)
+- **Vector store**: Pinecone (`liberty-dental-kb` index)
+- **LLM**: Llama 3.3 70B via Groq (Gemini 2.5 Flash as fallback)
+- **UI**: Streamlit
+
+---
 
 ## Run locally
 
-Install dependencies:
+### 1. Prerequisites
+
+- Python 3.11
+- API keys for: Groq, Pinecone, Contentful, Gemini
+
+### 2. Setup
 
 ```powershell
+# Create and activate virtual environment
+python -m venv venv
+venv\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-Start the Streamlit app:
+### 3. Environment variables
+
+Create a `.env` file in the project root:
+
+```
+CONTENTFUL_SPACE_ID=your_space_id
+CONTENTFUL_ACCESS_TOKEN=your_access_token
+ENVIRONMENT=your_environment
+GROQ_API_KEY=your_groq_key
+PINECONE_API_KEY=your_pinecone_key
+GEMINI_API_KEY=your_gemini_key
+```
+
+### 4. Start the chatbot
 
 ```powershell
 streamlit run app.py
 ```
 
-## POC demo talking points
+Open your browser at: **http://localhost:8501**
 
-- This is a website advisory assistant, not an authenticated member support bot.
-- The real implementation can connect to published Contentful content.
-- The bot should only answer from approved website content.
-- Secure/account-specific actions are redirected to existing Liberty portals.
-- Guardrails are included for personal data, claims, eligibility, benefits, and medical advice.
+### 5. Open the widget demo
+
+Open `chatbot-widget-demo.html` directly in your browser (double-click the file).  
+The floating chat icon will appear bottom-left. Click it to open the chatbot panel.
+
+> **Note:** Streamlit must be running (`streamlit run app.py`) before opening the widget demo, otherwise the panel will show a loading spinner.
+
+---
+
+## Rebuild the knowledge base
+
+Run this once to re-index all Contentful content into Pinecone:
+
+```powershell
+python data_pipeline.py
+```
+
+---
+
+## Deploy to Azure
+
+See the GitHub Actions workflow at `.github/workflows/azure-deploy.yml`.
+
+**Required GitHub Secrets:**
+
+| Secret | Description |
+|--------|-------------|
+| `AZURE_WEBAPP_NAME` | Your Azure Web App name |
+| `AZURE_WEBAPP_PUBLISH_PROFILE` | XML from Azure Portal → Get publish profile |
+
+**Azure App Service settings:**
+
+- Runtime: Python 3.11 (Linux)
+- Startup command: `bash startup.sh`
+- `WEBSITES_PORT` = `8000`
+- Add all `.env` keys as Application Settings
+
+---
+
+## Project structure
+
+```
+app.py                      — Main Streamlit chatbot application
+data_pipeline.py            — Fetches Contentful content → Pinecone index
+startup.sh                  — Azure App Service startup command
+requirements.txt            — Python dependencies
+Dockerfile                  — Docker container (alternative Azure deploy)
+.streamlit/config.toml      — Streamlit server config (headless, CORS off)
+.github/workflows/
+  azure-deploy.yml          — GitHub Actions CI/CD to Azure
+chatbot-widget-demo.html    — LDP website with floating chat widget demo
+ldp-how-it-works.html       — System architecture diagram
+ldp-chatbot-guide.html      — Routing logic and link reference
+ldp-counts.html             — Contentful content coverage audit
+ldp-contentful-suggestion.html — CMS strategy guide
+```
