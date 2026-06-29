@@ -1,3 +1,14 @@
+---
+title: Liberty Dental Plan AI Chatbot
+emoji: 🦷
+colorFrom: blue
+colorTo: teal
+sdk: streamlit
+sdk_version: 1.31.0
+app_file: app.py
+pinned: false
+---
+
 # Liberty Dental Plan — AI Chatbot
 
 An AI-powered chatbot for the Liberty Dental Plan public website.  
@@ -77,6 +88,30 @@ python data_pipeline.py
 
 ---
 
+## Deploy to Hugging Face Spaces
+
+1. Go to **huggingface.co** → New Space
+2. Name it, select **Streamlit** SDK, choose **CPU Basic** (free)
+3. Set **Repository secrets** (Settings → Repository secrets):
+
+| Secret | Value |
+|--------|-------|
+| `CONTENTFUL_SPACE_ID` | your space id |
+| `CONTENTFUL_ACCESS_TOKEN` | your token |
+| `ENVIRONMENT` | your environment |
+| `GROQ_API_KEY` | your groq key |
+| `PINECONE_API_KEY` | your pinecone key |
+| `GEMINI_API_KEY` | your gemini key |
+
+4. Push this repo to the HF Space git remote:
+
+```bash
+git remote add hf https://huggingface.co/spaces/YOUR_HF_USERNAME/liberty-dental-chatbot
+git push hf main
+```
+
+---
+
 ## Deploy to Azure
 
 See the GitHub Actions workflow at `.github/workflows/azure-deploy.yml`.
@@ -100,17 +135,18 @@ See the GitHub Actions workflow at `.github/workflows/azure-deploy.yml`.
 ## Project structure
 
 ```
-app.py                      — Main Streamlit chatbot application
-data_pipeline.py            — Fetches Contentful content → Pinecone index
-startup.sh                  — Azure App Service startup command
-requirements.txt            — Python dependencies
-Dockerfile                  — Docker container (alternative Azure deploy)
-.streamlit/config.toml      — Streamlit server config (headless, CORS off)
+app.py                          — Main Streamlit chatbot application
+data_pipeline.py                — Fetches Contentful content → Pinecone index
+startup.sh                      — Azure App Service startup command
+Procfile                        — Railway deployment start command
+requirements.txt                — Python dependencies
+Dockerfile                      — Docker container (alternative deploy)
+.streamlit/config.toml          — Streamlit server config (headless, CORS off)
 .github/workflows/
-  azure-deploy.yml          — GitHub Actions CI/CD to Azure
-chatbot-widget-demo.html    — LDP website with floating chat widget demo
-ldp-how-it-works.html       — System architecture diagram
-ldp-chatbot-guide.html      — Routing logic and link reference
-ldp-counts.html             — Contentful content coverage audit
-ldp-contentful-suggestion.html — CMS strategy guide
+  azure-deploy.yml              — GitHub Actions CI/CD to Azure
+chatbot-widget-demo.html        — LDP website with floating chat widget demo
+ldp-how-it-works.html           — System architecture diagram
+ldp-chatbot-guide.html          — Routing logic and link reference
+ldp-counts.html                 — Contentful content coverage audit
+ldp-contentful-suggestion.html  — CMS strategy guide
 ```
