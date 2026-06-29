@@ -5,10 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Liberty Dental Plan</title>
 <script>
-  // ── CHANGE THIS to your Azure URL after deployment ──
-  // Local testing:  'http://localhost:8501'
-  // After Azure:    'https://your-app-name.azurewebsites.net'
-  var CHATBOT_URL = 'http://localhost:8501';
+  // Deployed on Hugging Face Spaces
+  var CHATBOT_URL = 'https://kairamkondasai-liberty-dental-chatbot.hf.space';
 </script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -451,7 +449,7 @@ footer { background: #1b2161; color: rgba(255,255,255,0.65); padding: 28px 48px;
   <div class="hero-content">
     <h1>Making members shine,<br>one smile at a time<span class="hero-tm">™</span></h1>
     <p>Are you a Liberty Dental Plan member?<br>Explore helpful resources to get the most from your plan.</p>
-    <button class="btn-start">Get started</button>
+    <button type="button" class="btn-start">Get started</button>
   </div>
 </section>
 
@@ -506,7 +504,7 @@ footer { background: #1b2161; color: rgba(255,255,255,0.65); padding: 28px 48px;
 <div id="chat-tooltip">Chat with our AI assistant</div>
 
 <!-- Floating button (bottom-left) -->
-<button id="chat-btn" onclick="toggleChat()" aria-label="Open Liberty AI Assistant">
+<button type="button" id="chat-btn" onclick="toggleChat()" aria-label="Open Liberty AI Assistant">
   <span class="pulse-ring"></span>
   <span class="notif-dot"></span>
 
