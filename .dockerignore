@@ -1,0 +1,17 @@
+.env
+.env.*
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.agents/
+*.json
+diagnostic_contentful.py
+inspect_content.py
+data_pipeline.py
+ldp-*.html
+chatbot-widget-demo.html
+README.md
+Avenir Next LT Pro/
