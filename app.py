@@ -178,7 +178,7 @@ def fetch_answer_from_ai(question):
         print(f"Pinecone error: {e}")
         return "I'm having trouble accessing my knowledge base right now. Please try again later.", ["Contact Liberty"]
 
-    if not results.matches or results.matches[0].score < 0.45:
+    if not results.matches or results.matches[0].score < 0.30:
         return (
             "I could not find specific information about that in our public knowledge base. "
             "Please visit the Contact Liberty page or use the appropriate secure portal for assistance.",
