@@ -111,28 +111,43 @@ def format_links(link_names):
     html += '</div></div>'
     return html
 
-def determine_related_links(text):
-    """Simple heuristic to suggest links based on generated text content."""
+def determine_related_links(question, answer=""):
+    """Suggest links based on what the user explicitly asked about."""
     links = set()
-    text_lower = text.lower()
-    
-    if "app" in text_lower or "download" in text_lower:
+    q = question.lower()
+
+    # Mobile app — only when user specifically asks about downloading or the app
+    if "download" in q or "mobile app" in q or ("app" in q and ("install" in q or "phone" in q or "android" in q or "iphone" in q or "ios" in q)):
         links.update(["Mobile App (Apple)", "Mobile App (Android)"])
-    if "shop" in text_lower or "buy" in text_lower or "individual" in text_lower:
+
+    # Shop plans — only when user asks about buying or enrolling
+    if "shop" in q or "buy" in q or "enroll" in q or "sign up" in q or "purchase" in q:
         links.add("Shop Plans")
-    if "login" in text_lower or "portal" in text_lower:
+
+    # Member portal — only when user asks about logging in or their account
+    if "login" in q or "log in" in q or "portal" in q or "my account" in q or "sign in" in q:
         links.add("Member Login")
-    if "find" in text_lower and "dentist" in text_lower:
+
+    # Find a dentist — only when user asks about finding or locating a dentist
+    if ("find" in q and "dentist" in q) or "dentist near" in q or "in-network dentist" in q or "locate" in q:
         links.add("Find a Dentist")
-    if "teledentistry" in text_lower or "emergency" in text_lower:
+
+    # Teledentistry — only when user asks about virtual/online dental care
+    if "teledentistry" in q or ("virtual" in q and "dentist" in q) or ("online" in q and "dentist" in q):
         links.add("Teledentistry")
-    if "provider" in text_lower or "join" in text_lower:
+
+    # Provider network — only when asking about joining as a provider
+    if ("join" in q or "become" in q) and ("provider" in q or "network" in q or "dentist" in q):
         links.add("Join Provider Network")
-    if "broker" in text_lower:
+
+    # Broker — only when user asks about brokers or agents
+    if "broker" in q or "agent" in q:
         links.update(["Brokers", "Broker Contact"])
-    if "grievance" in text_lower or "appeal" in text_lower:
+
+    # Grievance — only when user asks about complaints or appeals
+    if "grievance" in q or "appeal" in q or "complaint" in q or "dispute" in q:
         links.add("File a Grievance or Appeal")
-        
+
     return list(links)
 
 # --- AI ROUTING ENGINE ---
@@ -223,8 +238,8 @@ def fetch_answer_from_ai(question):
             print(f"Gemini error: {gemini_e}")
             return "I'm sorry, I am experiencing a temporary technical issue generating an answer.", ["Contact Liberty"]
             
-    # Determine helpful links based on the context/answer
-    links = determine_related_links(answer + " " + question)
+    # Suggest links based on what the user asked — not the AI answer
+    links = determine_related_links(question)
     
     return answer, links
 
